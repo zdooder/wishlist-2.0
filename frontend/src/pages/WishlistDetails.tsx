@@ -112,6 +112,7 @@ const WishlistDetails: React.FC = () => {
           };
           reader.readAsDataURL(file);
         } catch (error) {
+          console.log(`error processing pasted image: ${error}`);
           setError('Failed to process pasted image');
         }
         break;
@@ -144,6 +145,7 @@ const WishlistDetails: React.FC = () => {
       };
       reader.readAsDataURL(file);
     } catch (error) {
+      console.log(`error processing image: ${error}`);
       setError('Failed to process image');
     }
   };

@@ -64,12 +64,30 @@ const WishlistDetails: React.FC = () => {
   const [itemComments, setItemComments] = useState<{ [key: string]: string }>({});
   const [itemToDelete, setItemToDelete] = useState<Item | null>(null);
   const [editingComment, setEditingComment] = useState<{ id: string; content: string } | null>(null);
+  const [editingItem, setEditingItem] = useState<Item | null>(null);
+  const [editForm, setEditForm] = useState({
+    name: '',
+    description: '',
+    price: '',
+    url: '',
+    imageUrl: '',
+    imageData: ''
+  });
+  const [editingWishlist, setEditingWishlist] = useState(false);
+  const [wishlistForm, setWishlistForm] = useState({
+    name: '',
+    description: ''
+  });
 
   useEffect(() => {
     const fetchWishlist = async () => {
       try {
         const response = await wishlists.getById(id!);
         setWishlist(response.data);
+        setWishlistForm({
+          name: response.data.name,
+          description: response.data.description || ''
+        });
         // Initialize comment fields for each item
         const initialComments: { [key: string]: string } = {};
         response.data.items.forEach((item: Item) => {
@@ -347,6 +365,124 @@ const WishlistDetails: React.FC = () => {
     }
   };
 
+  const handleEditClick = (item: Item) => {
+    setEditingItem(item);
+    setEditForm({
+      name: item.name,
+      description: item.description || '',
+      price: item.price?.toString() || '',
+      url: item.url || '',
+      imageUrl: '',
+      imageData: item.imageData || ''
+    });
+  };
+
+  const handleEditImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Check if file is an image
+    if (!file.type.startsWith('image/')) {
+      setError('Please upload an image file');
+      return;
+    }
+
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image size should be less than 5MB');
+      return;
+    }
+
+    try {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64 = event.target?.result as string;
+        setEditForm(prev => ({ ...prev, imageData: base64, imageUrl: '' }));
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error('Error processing image:', error);
+      setError('Failed to process image');
+    }
+  };
+
+  const handleEditImagePaste = async (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    for (const item of items) {
+      if (item.type.startsWith('image/')) {
+        e.preventDefault();
+        const file = item.getAsFile();
+        if (!file) continue;
+
+        // Check file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          setError('Image size should be less than 5MB');
+          return;
+        }
+
+        try {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            const base64 = event.target?.result as string;
+            setEditForm(prev => ({ ...prev, imageData: base64, imageUrl: '' }));
+          };
+          reader.readAsDataURL(file);
+        } catch (error) {
+          console.error('Error processing pasted image:', error);
+          setError('Failed to process pasted image');
+        }
+        break;
+      }
+    }
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingItem) return;
+
+    try {
+      const { data } = await items.update(editingItem.id, {
+        name: editForm.name,
+        description: editForm.description,
+        price: editForm.price ? parseFloat(editForm.price) : 0,
+        url: editForm.url,
+        imageUrl: editForm.imageUrl,
+        imageData: editForm.imageData
+      });
+
+      setWishlist(prev => prev ? {
+        ...prev,
+        items: prev.items.map(item =>
+          item.id === editingItem.id ? { ...data, comments: item.comments } : item
+        )
+      } : null);
+
+      setEditingItem(null);
+      setError('');
+    } catch (err) {
+      const error = err as AxiosError<{ message: string }>;
+      setError(error.response?.data?.message || 'Failed to update item');
+    }
+  };
+
+  const handleWishlistEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const { data } = await wishlists.update(id!, {
+        name: wishlistForm.name,
+        description: wishlistForm.description
+      });
+      setWishlist(prev => prev ? { ...prev, ...data } : null);
+      setEditingWishlist(false);
+      setError('');
+    } catch (err) {
+      const error = err as AxiosError<{ message: string }>;
+      setError(error.response?.data?.message || 'Failed to update wishlist');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -379,15 +515,64 @@ const WishlistDetails: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">{wishlist.name}</h1>
-            <p className="text-gray-600 mt-1">{wishlist.description}</p>
-            <p className="text-sm text-gray-500 mt-2">
-              Created by {wishlist.user.name}
-            </p>
-          </div>
+        <div className="flex justify-between items-start mb-8">
+          {editingWishlist ? (
+            <form onSubmit={handleWishlistEdit} className="flex-grow space-y-4">
+              <div>
+                <label htmlFor="wishlist-name" className="block text-sm font-medium text-gray-700">
+                  Wishlist Name
+                </label>
+                <input
+                  type="text"
+                  id="wishlist-name"
+                  value={wishlistForm.name}
+                  onChange={(e) => setWishlistForm(prev => ({ ...prev, name: e.target.value }))}
+                  required
+                  className="input-field"
+                />
+              </div>
+              <div>
+                <label htmlFor="wishlist-description" className="block text-sm font-medium text-gray-700">
+                  Description
+                </label>
+                <textarea
+                  id="wishlist-description"
+                  value={wishlistForm.description}
+                  onChange={(e) => setWishlistForm(prev => ({ ...prev, description: e.target.value }))}
+                  className="input-field"
+                />
+              </div>
+              <div className="flex space-x-4">
+                <button
+                  type="button"
+                  onClick={() => setEditingWishlist(false)}
+                  className="btn-secondary"
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="btn-primary">
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          ) : (
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">{wishlist.name}</h1>
+              <p className="text-gray-600 mt-1">{wishlist.description}</p>
+              <p className="text-sm text-gray-500 mt-2">
+                Created by {wishlist.user.name}
+              </p>
+            </div>
+          )}
           <div className="flex space-x-4">
+            {isOwner && !editingWishlist && (
+              <button
+                onClick={() => setEditingWishlist(true)}
+                className="btn-secondary"
+              >
+                Edit Wishlist
+              </button>
+            )}
             {isOwner && (
               <button
                 onClick={() => setShowAddItemForm(!showAddItemForm)}
@@ -534,96 +719,222 @@ const WishlistDetails: React.FC = () => {
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
           {wishlist.items.map((item) => (
             <div key={item.id} className="card">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900">{item.name}</h3>
-                  <p className="text-gray-600 mt-1">{item.description}</p>
-                  {item.url && (
-                    <a
-                      href={item.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 mt-1 inline-block"
-                    >
-                      View Item
-                    </a>
-                  )}
-                </div>
-                <div className="flex flex-col items-end space-y-2">
-                  {item.price && (
-                    <div className="text-lg font-medium text-gray-900">
-                      ${item.price.toFixed(2)}
+              {editingItem?.id === item.id ? (
+                <form onSubmit={handleEditSubmit} className="space-y-4">
+                  <div>
+                    <label htmlFor="edit-name" className="block text-sm font-medium text-gray-700">
+                      Name
+                    </label>
+                    <input
+                      type="text"
+                      id="edit-name"
+                      value={editForm.name}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
+                      required
+                      className="input-field"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="edit-description" className="block text-sm font-medium text-gray-700">
+                      Description
+                    </label>
+                    <textarea
+                      id="edit-description"
+                      value={editForm.description}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, description: e.target.value }))}
+                      className="input-field"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="edit-price" className="block text-sm font-medium text-gray-700">
+                      Price
+                    </label>
+                    <input
+                      type="number"
+                      id="edit-price"
+                      value={editForm.price}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, price: e.target.value }))}
+                      step="0.01"
+                      min="0"
+                      className="input-field"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="edit-url" className="block text-sm font-medium text-gray-700">
+                      Item URL
+                    </label>
+                    <input
+                      type="url"
+                      id="edit-url"
+                      value={editForm.url}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, url: e.target.value }))}
+                      className="input-field"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="edit-imageUrl" className="block text-sm font-medium text-gray-700">
+                      Image URL or Paste Image
+                    </label>
+                    <input
+                      type="text"
+                      id="edit-imageUrl"
+                      value={editForm.imageUrl}
+                      onChange={(e) => {
+                        setEditForm(prev => ({ ...prev, imageUrl: e.target.value, imageData: '' }));
+                      }}
+                      onPaste={handleEditImagePaste}
+                      placeholder="Enter image URL or paste an image"
+                      className="input-field"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="edit-imageUpload" className="block text-sm font-medium text-gray-700">
+                      Or Upload Image
+                    </label>
+                    <input
+                      type="file"
+                      id="edit-imageUpload"
+                      accept="image/*"
+                      onChange={handleEditImageUpload}
+                      className="mt-1 block w-full text-sm text-gray-500
+                        file:mr-4 file:py-2 file:px-4
+                        file:rounded-md file:border-0
+                        file:text-sm file:font-semibold
+                        file:bg-blue-50 file:text-blue-700
+                        hover:file:bg-blue-100"
+                    />
+                  </div>
+                  {editForm.imageData && (
+                    <div className="mt-2">
+                      <img
+                        src={editForm.imageData}
+                        alt="Preview"
+                        className="w-32 h-32 object-cover rounded-lg"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditForm(prev => ({ ...prev, imageData: '' }));
+                        }}
+                        className="mt-1 text-sm text-red-600 hover:text-red-800"
+                      >
+                        Remove image
+                      </button>
                     </div>
                   )}
-                  {item.reservedBy && !item.isPurchased && (
-                    <span className="px-2 py-1 text-sm rounded bg-yellow-100 text-yellow-800 flex items-center">
-                      Reserved by {item.reservedBy.name}
-                      {item.reservedBy.id === user?.id && (
-                        <button
-                          onClick={() => handleClearReservation(item.id)}
-                          className="ml-1.5 text-yellow-800 hover:text-yellow-900 bg-transparent p-0.5"
-                          title="Clear reservation"
+                  <div className="flex justify-end space-x-4">
+                    <button
+                      type="button"
+                      onClick={() => setEditingItem(null)}
+                      className="btn-secondary"
+                    >
+                      Cancel
+                    </button>
+                    <button type="submit" className="btn-primary">
+                      Save Changes
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-lg font-medium text-gray-900">{item.name}</h3>
+                      <p className="text-gray-600 mt-1">{item.description}</p>
+                      {item.url && (
+                        <a
+                          href={item.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 mt-1 inline-block"
                         >
-                          ×
-                        </button>
+                          View Item
+                        </a>
                       )}
-                    </span>
-                  )}
-                  {item.isPurchased && (
-                    <span className="px-2 py-1 text-sm rounded bg-green-100 text-green-800 flex items-center">
-                      Purchased
-                      {item.reservedBy?.id === user?.id && (
-                        <button
-                          onClick={() => handleClearPurchase(item.id)}
-                          className="ml-1.5 text-green-800 hover:text-green-900 bg-transparent p-0.5"
-                          title="Clear purchase status"
-                        >
-                          ×
-                        </button>
+                    </div>
+                    <div className="flex flex-col items-end space-y-2">
+                      {item.price && (
+                        <div className="text-lg font-medium text-gray-900">
+                          ${item.price.toFixed(2)}
+                        </div>
                       )}
-                    </span>
-                  )}
-                </div>
-              </div>
+                      {item.reservedBy && !item.isPurchased && (
+                        <span className="px-2 py-1 text-sm rounded bg-yellow-100 text-yellow-800 flex items-center">
+                          Reserved by {item.reservedBy.name}
+                          {item.reservedBy.id === user?.id && (
+                            <button
+                              onClick={() => handleClearReservation(item.id)}
+                              className="ml-1.5 text-yellow-800 hover:text-yellow-900 bg-transparent p-0.5"
+                              title="Clear reservation"
+                            >
+                              ×
+                            </button>
+                          )}
+                        </span>
+                      )}
+                      {item.isPurchased && (
+                        <span className="px-2 py-1 text-sm rounded bg-green-100 text-green-800 flex items-center">
+                          Purchased
+                          {item.reservedBy?.id === user?.id && (
+                            <button
+                              onClick={() => handleClearPurchase(item.id)}
+                              className="ml-1.5 text-green-800 hover:text-green-900 bg-transparent p-0.5"
+                              title="Clear purchase status"
+                            >
+                              ×
+                            </button>
+                          )}
+                        </span>
+                      )}
+                    </div>
+                  </div>
 
-              {item.imageData && (
-                <div className="mt-4">
-                  <img
-                    src={item.imageData}
-                    alt={item.name}
-                    className="w-full h-48 object-cover rounded-lg"
-                  />
-                </div>
+                  {item.imageData && (
+                    <div className="mt-4">
+                      <img
+                        src={item.imageData}
+                        alt={item.name}
+                        className="w-full h-48 object-cover rounded-lg"
+                      />
+                    </div>
+                  )}
+
+                  <div className="flex space-x-2 mt-4">
+                    {(isOwner) && (
+                      <button
+                        onClick={() => handleEditClick(item)}
+                        className="btn-secondary"
+                      >
+                        Edit Item
+                      </button>
+                    )}
+                    {!isOwner && !item.reservedBy && !item.isPurchased && (
+                      <button
+                        onClick={() => handleReserveItem(item.id)}
+                        className="btn-secondary"
+                      >
+                        Reserve Item
+                      </button>
+                    )}
+                    {!item.isPurchased && (
+                      <button
+                        onClick={() => handleMarkAsPurchased(item.id)}
+                        className="btn-secondary"
+                      >
+                        Mark as Purchased
+                      </button>
+                    )}
+                    {isOwner && (
+                      <button
+                        onClick={() => handleDeleteClick(item)}
+                        className="btn-secondary bg-red-600 hover:bg-red-700"
+                      >
+                        Delete Item
+                      </button>
+                    )}
+                  </div>
+                </>
               )}
-
-              <div className="flex space-x-2 mt-4">
-                {!isOwner && !item.reservedBy && !item.isPurchased && (
-                  <button
-                    onClick={() => handleReserveItem(item.id)}
-                    className="btn-secondary"
-                  >
-                    Reserve Item
-                  </button>
-                )}
-
-                {!item.isPurchased && (
-                  <button
-                    onClick={() => handleMarkAsPurchased(item.id)}
-                    className="btn-secondary"
-                  >
-                    Mark as Purchased
-                  </button>
-                )}
-
-                {isOwner && (
-                  <button
-                    onClick={() => handleDeleteClick(item)}
-                    className="btn-secondary bg-red-600 hover:bg-red-700"
-                  >
-                    Delete Item
-                  </button>
-                )}
-              </div>
 
               {!isOwner && (
                 <div className="mt-4">

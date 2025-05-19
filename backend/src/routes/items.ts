@@ -59,14 +59,23 @@ router.put('/:id', auth, (async (req: any, res) => {
 
     const item = await prisma.item.findUnique({
       where: { id },
-      include: { wishlist: true }
+      include: { 
+        wishlist: true,
+        reservedBy: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
+      }
     });
 
     if (!item) {
       return res.status(404).json({ message: 'Item not found' });
     }
 
-    if (item.wishlist.userId !== req.user.id) {
+    // Check if user is either the wishlist owner or the item owner (reservedBy)
+    if (item.wishlist.userId !== req.user.id && item.reservedById !== req.user.id) {
       return res.status(403).json({ message: 'Not authorized' });
     }
 
@@ -81,7 +90,15 @@ router.put('/:id', auth, (async (req: any, res) => {
 
     const updatedItem = await prisma.item.update({
       where: { id },
-      data: { name, description, price, url, imageData: finalImageData }
+      data: { name, description, price, url, imageData: finalImageData },
+      include: {
+        reservedBy: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
+      }
     });
 
     res.json(updatedItem);

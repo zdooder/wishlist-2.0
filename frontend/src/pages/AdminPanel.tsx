@@ -208,14 +208,14 @@ const AdminPanel: React.FC = () => {
                         {user.isActive ? (
                           <button
                             onClick={() => handleDeactivate(user.id)}
-                            className="btn-secondary bg-yellow-600 hover:bg-yellow-700"
+                            className="btn-secondary text-white bg-yellow-600 hover:bg-yellow-700"
                           >
                             Deactivate
                           </button>
                         ) : (
                           <button
                             onClick={() => handleReactivate(user.id)}
-                            className="btn-secondary bg-green-600 hover:bg-green-700"
+                            className="btn-secondary text-white bg-green-600 hover:bg-green-700"
                           >
                             Reactivate
                           </button>
@@ -223,7 +223,7 @@ const AdminPanel: React.FC = () => {
                         <button
                           onClick={() => handleToggleAdmin(user.id)}
                           disabled={user.isAdmin && user.id === currentUser?.id}
-                          className={`btn-secondary ${
+                          className={`btn-secondary text-white ${
                             user.isAdmin 
                               ? 'bg-red-600 hover:bg-red-700' 
                               : 'bg-purple-600 hover:bg-purple-700'

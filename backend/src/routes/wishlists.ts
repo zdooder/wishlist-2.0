@@ -164,6 +164,7 @@ router.put('/:id', auth, (async (req: any, res) => {
 
     res.json(updatedWishlist);
   } catch (error) {
+    console.log(`error updating wishlist: ${error}`);
     res.status(500).json({ message: 'Error updating wishlist' });
   }
 }) as RequestHandler);

@@ -51,7 +51,7 @@ const Navbar: React.FC = () => {
               {/* Dashboard link removed */}
             </div>
           </div>
-          <div className="hidden sm:ml-6 sm:flex sm:items-center">
+          <div className="ml-6 sm:flex sm:items-center">
             <div className="ml-3 relative">
               <div>
                 <button

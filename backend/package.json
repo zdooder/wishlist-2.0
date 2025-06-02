@@ -5,6 +5,8 @@
   "scripts": {
     "start": "ts-node src/server.ts",
     "dev": "ts-node-dev --respawn src/server.ts",
+    "build": "rm -rf node_modules dist && npm ci && npx prisma generate && npx tsc",
+    "deploy": "tar cf - dist node_modules prisma package.json ecosystem.config.js | ssh root@aurica.akropolys.com '(cd /data/websites/wishlists.akropolys.com/backend; tar xvf -)'",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -12,24 +14,25 @@
   "license": "ISC",
   "description": "",
   "devDependencies": {
-    "@prisma/client": "^6.8.2",
     "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.18",
     "@types/express": "^5.0.2",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^22.15.18",
-    "bcryptjs": "^3.0.2",
-    "cors": "^2.8.5",
-    "dotenv": "^16.5.0",
-    "express": "^5.1.0",
-    "jsonwebtoken": "^9.0.2",
     "prisma": "^6.8.2",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.8.3"
   },
   "dependencies": {
+    "@prisma/client": "^6.8.2",
     "axios": "^1.9.0",
-    "sharp": "^0.34.1"
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "sharp": "^0.34.1",
+    "pm2": "^6.0.6"
   }
 }

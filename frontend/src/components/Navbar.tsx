@@ -43,7 +43,7 @@ const Navbar: React.FC = () => {
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
               <Link to="/dashboard" className="text-xl font-bold text-gray-800 flex items-center">
-                <img src="/public/icons/icon-72x72.png" />
+                <img src="/icons/icon-72x72.png" />
                 Wishlists!
               </Link>
             </div>

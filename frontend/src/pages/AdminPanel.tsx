@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { users } from '../services/api';
 import { AxiosError } from 'axios';
 import { useAuth } from '../contexts/AuthContext';
+import { HomeIcon } from '@heroicons/react/24/solid';
 
 interface User {
   id: string;
@@ -125,7 +126,8 @@ const AdminPanel: React.FC = () => {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Admin Panel</h1>
           <Link to="/dashboard" className="btn-secondary">
-            Back to Dashboard
+            Home
+            <HomeIcon className="h-5 w-5 mx-[5px]"/>
           </Link>
         </div>
 

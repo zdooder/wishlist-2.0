@@ -3,6 +3,8 @@ import { useParams, Link } from 'react-router-dom';
 import { wishlists, items } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { AxiosError } from 'axios';
+import Markdown from 'react-markdown';
+import { PencilSquareIcon, DocumentCheckIcon, TrashIcon, PencilIcon, PlusIcon, HomeIcon, XMarkIcon } from '@heroicons/react/24/solid';
 
 interface Comment {
   id: string;
@@ -539,7 +541,7 @@ const WishlistDetails: React.FC = () => {
                   id="wishlist-description"
                   value={wishlistForm.description}
                   onChange={(e) => setWishlistForm(prev => ({ ...prev, description: e.target.value }))}
-                  className="input-field"
+                  className="input-field min-h-[200px]"
                 />
               </div>
               <div className="flex space-x-4">
@@ -558,7 +560,7 @@ const WishlistDetails: React.FC = () => {
           ) : (
             <div>
               <h1 className="text-3xl font-bold text-gray-900">{wishlist.name}</h1>
-              <p className="text-gray-600 mt-1">{wishlist.description}</p>
+              <p className="text-gray-600 mt-1"><Markdown>{wishlist.description}</Markdown></p>
               <p className="text-sm text-gray-500 mt-2">
                 Created by {wishlist.user.name}
               </p>
@@ -571,18 +573,30 @@ const WishlistDetails: React.FC = () => {
                 className="btn-secondary"
               >
                 Edit Wishlist
+                <PencilIcon className="w-5 h-5 mx-[5px]"/>
               </button>
             )}
             {isOwner && (
               <button
                 onClick={() => setShowAddItemForm(!showAddItemForm)}
-                className="btn-primary"
+                className= { showAddItemForm ? "btn-cancel" : "btn-primary" }
               >
-                {showAddItemForm ? 'Cancel' : 'Add Item'}
+                {showAddItemForm ? (
+                  <>
+                    Cancel
+                    <XMarkIcon className="w-5 h-5 mx-[5px]"/>
+                  </>
+                ) : (
+                  <>
+                    Add Item
+                    <PlusIcon className="w-5 h-5 mx-[5px]"/> 
+                  </>
+                  )}
               </button>
             )}
             <Link to="/dashboard" className="btn-secondary">
-              Back to Dashboard
+              Home
+              <HomeIcon className="w-5 h-5 mx-[5px]"/>
             </Link>
           </div>
         </div>
@@ -618,7 +632,7 @@ const WishlistDetails: React.FC = () => {
                   id="description"
                   value={newItem.description}
                   onChange={(e) => setNewItem(prev => ({ ...prev, description: e.target.value }))}
-                  className="input-field"
+                  className="input-field min-h-[200px]"
                 />
               </div>
               <div>
@@ -676,7 +690,7 @@ const WishlistDetails: React.FC = () => {
                         setImagePreview(null);
                         setNewItem(prev => ({ ...prev, imageData: '' }));
                       }}
-                      className="mt-1 text-sm text-red-600 hover:text-red-800"
+                      className="mt-1 text-sm bg-gray-300 text-red-600 hover:text-red-800"
                     >
                       Remove image
                     </button>
@@ -710,6 +724,7 @@ const WishlistDetails: React.FC = () => {
                 </button>
                 <button type="submit" className="btn-primary">
                   Add Item
+                  <PlusIcon className="w-5 h-5 mx-[5px]"/> 
                 </button>
               </div>
             </form>
@@ -816,7 +831,7 @@ const WishlistDetails: React.FC = () => {
                         onClick={() => {
                           setEditForm(prev => ({ ...prev, imageData: '' }));
                         }}
-                        className="mt-1 text-sm text-red-600 hover:text-red-800"
+                        className="mt-1 text-sm bg-gray-300 text-red-600 hover:text-red-800"
                       >
                         Remove image
                       </button>
@@ -840,7 +855,9 @@ const WishlistDetails: React.FC = () => {
                   <div className="flex justify-between items-start">
                     <div>
                       <h3 className="text-lg font-medium text-gray-900">{item.name}</h3>
-                      <p className="text-gray-600 mt-1">{item.description}</p>
+                      <p className="text-gray-600 mt-1">
+                        <Markdown>{item.description}</Markdown>
+                      </p>
                       {item.url && (
                         <a
                           href={item.url}
@@ -891,11 +908,18 @@ const WishlistDetails: React.FC = () => {
 
                   {item.imageData && (
                     <div className="mt-4">
-                      <img
-                        src={item.imageData}
-                        alt={item.name}
-                        className="w-full h-48 object-cover rounded-lg"
-                      />
+                      {item.url && <a
+                          href={item.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 mt-1"
+                        >
+                          <img
+                          src={item.imageData}
+                          alt={item.name}
+                            className="w-full h-48 object-cover rounded-lg"
+                          />
+                      </a>}
                     </div>
                   )}
 
@@ -906,6 +930,7 @@ const WishlistDetails: React.FC = () => {
                         className="btn-secondary"
                       >
                         Edit Item
+                        <PencilSquareIcon className="w-5 h-5 mx-[5px]" />
                       </button>
                     )}
                     {!isOwner && !item.reservedBy && !item.isPurchased && (
@@ -922,14 +947,16 @@ const WishlistDetails: React.FC = () => {
                         className="btn-secondary"
                       >
                         Mark as Purchased
+                        <DocumentCheckIcon className="w-5 h-5 mx-[5px]"/>
                       </button>
                     )}
                     {isOwner && (
                       <button
                         onClick={() => handleDeleteClick(item)}
-                        className="btn-secondary bg-red-600 hover:bg-red-700"
+                        className="btn-secondary text-white bg-red-600 hover:bg-red-700"
                       >
                         Delete Item
+                        <TrashIcon className="w-5 h-5 mx-[5px]"/>
                       </button>
                     )}
                   </div>

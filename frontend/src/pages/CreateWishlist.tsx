@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { wishlists } from '../services/api';
 import { AxiosError } from 'axios';
+import { DocumentPlusIcon } from '@heroicons/react/24/solid';
 
 const CreateWishlist: React.FC = () => {
   const navigate = useNavigate();
@@ -80,7 +81,7 @@ const CreateWishlist: React.FC = () => {
                 disabled={loading}
                 className="btn-primary"
               >
-                {loading ? 'Creating...' : 'Create Wishlist'}
+                {loading ? 'Creating...' : 'Create Wishlist'} <DocumentPlusIcon className="w-5 h-5 mx-[5px]" />
               </button>
             </div>
           </form>

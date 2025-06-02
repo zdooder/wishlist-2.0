@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { wishlists } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { AxiosError } from 'axios';
+import Markdown from 'react-markdown';
+import { DocumentPlusIcon } from '@heroicons/react/24/solid';
 
 interface Item {
   id: string;
@@ -93,7 +95,11 @@ const Dashboard: React.FC = () => {
                 <div className="text-sm font-medium text-gray-900">{wishlist.name}</div>
               </td>
               <td className="px-6 py-4">
-                <div className="text-sm text-gray-500">{wishlist.description}</div>
+                <div className="text-sm text-gray-500">
+                  <p className="prose prose-sm max-w-none">
+                    <Markdown>{wishlist.description}</Markdown>
+                  </p>
+                </div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="text-sm text-gray-500">{wishlist.items.length} items</div>
@@ -128,8 +134,9 @@ const Dashboard: React.FC = () => {
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Home</h1>
           <Link to="/wishlists/new" className="btn-primary">
+            <DocumentPlusIcon className="w-5 h-5 mx-[5px]" />
             Create New Wishlist
           </Link>
         </div>

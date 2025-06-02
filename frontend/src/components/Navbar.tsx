@@ -42,8 +42,9 @@ const Navbar: React.FC = () => {
         <div className="flex justify-between h-16">
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
-              <Link to="/dashboard" className="text-xl font-bold text-gray-800">
-                Wishlist App
+              <Link to="/dashboard" className="text-xl font-bold text-gray-800 flex items-center">
+                <img src="/public/icons/icon-72x72.png" />
+                Wishlists!
               </Link>
             </div>
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">

@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "deploy": "(cd dist; tar cfz - .) | ssh root@aurica.akropolys.com '(cd /data/websites/wishlists.akropolys.com/; rm -rf public/*; cd public; tar xvfz -)'",
     "lint": "eslint .",
     "preview": "vite preview"
   },

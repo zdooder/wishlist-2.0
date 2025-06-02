@@ -61,6 +61,7 @@ const Navbar: React.FC = () => {
                   <span className="sr-only">Open user menu</span>
                   <div className="h-8 w-8 rounded-full bg-indigo-600 flex items-center justify-center text-white">
                     {user?.name?.[0]?.toUpperCase()}
+                    { pendingCount > 0 && <div className="absolute inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 border-2 border-white rounded-full top-1 end-2 dark:border-gray-900">{pendingCount}</div> }
                   </div>
                 </button>
               </div>
